@@ -31,44 +31,8 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: TextButton(
           onPressed: overlayController.show,
-          child: AmazingOverlay<OneAnimation>(
+          child: ConfirmDialog(
             overlayController: overlayController,
-            onDialogOpened: (TickerProvider vsync) {
-              AnimationController animationController = AnimationController(
-                  vsync: vsync, duration: const Duration(milliseconds: 500));
-              Animation<double> animation = CurvedAnimation(
-                      parent: animationController, curve: Curves.fastLinearToSlowEaseIn)
-                  .drive(
-                      Tween<double>(begin: 40.0, end: 0.0));
-              animationController.forward();
-              return OneAnimation(animationController, animation);
-            },
-            onDialogClosed: (OneAnimation animations) async {
-              animations.animationController.stop(canceled: true);
-              await animations.animationController.reverse();
-            },
-            builder: (OneAnimation animations) {
-              return Center(
-                child: AnimatedBuilder(
-                  animation: animations.animation,
-                  builder: (context, _) {
-                    return Container(
-                      transform: Matrix4.translationValues(0, animations.animation.value as double, 0),
-                      width: 350,
-                      height: 200,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(13),
-                          color: Colors.deepOrange),
-                      child: TextButton(
-                        onPressed: overlayController.hide,
-                        child: const Text("Close Me"),
-                      ),
-                    );
-                  }
-                ),
-              );
-            },
             child: const Text("Click Me"),
           ),
         ),

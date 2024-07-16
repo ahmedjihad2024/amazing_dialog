@@ -1,8 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 part 'models.dart';
+part 'dialogs/confirm_dialog.dart';
 
 typedef BuilderFactory<TT> = Widget Function(TT animations);
 typedef OnDialogOpened<TT> = TT Function(TickerProvider vsync);
