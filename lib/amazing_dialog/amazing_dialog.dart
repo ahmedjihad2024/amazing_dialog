@@ -1,37 +1,27 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 part 'models.dart';
 
-part 'animation_dialog.dart';
-
 class AmazingOverlay extends StatefulWidget {
-  final OverlayController _overlayController;
-  final OverlayPortalController _portalController;
-  final Widget _child;
-  final StartAnimation _startAnimation;
-  final EndAnimation _endAnimation;
-  final Widget _overlay;
-  final ({Duration startDuration, Duration endDuration})? _duration;
+  final OverlayController overlayController;
+  final OverlayPortalController portalController;
+  final Widget child;
+  final Widget Function(AnimationController animationController,Animation animation) builder;
+
+  final (AnimationController, Animation) Function(TickerProvider vsync) onDialogOpened;
+
+  final Future<void> Function(AnimationController animationController,Animation animation) onDialogClosed;
 
   AmazingOverlay(
       {super.key,
-      required OverlayController overlayController,
-      required Widget child,
-      required Widget overlay,
-      StartAnimation startAnimation = StartAnimation.animation01,
-      EndAnimation endAnimation = EndAnimation.animation01,
-      ({Duration startDuration, Duration endDuration})? duration})
-      : _overlayController = overlayController,
-        _portalController = OverlayPortalController(),
-        _child = child,
-        _overlay = overlay,
-        _startAnimation = startAnimation,
-        _endAnimation = endAnimation,
-        _duration = duration;
+      required this.overlayController,
+      required this.builder,
+      required this.child,
+      required this.onDialogClosed,
+      required this.onDialogOpened})
+      : portalController = OverlayPortalController();
 
   @override
   State<AmazingOverlay> createState() => _AmazingOverlayState();
@@ -42,9 +32,10 @@ class _AmazingOverlayState extends State<AmazingOverlay> {
 
   @override
   void initState() {
-    _stream = widget._overlayController.streamListener().listen((overlayState) {
-      if (overlayState == OverlayState.displayed)
-        widget._portalController.toggle();
+    _stream = widget.overlayController.streamListener().listen((overlayState) {
+      if (overlayState == OverlayState.displayed) {
+        widget.portalController.toggle();
+      }
     });
     super.initState();
   }
@@ -58,42 +49,35 @@ class _AmazingOverlayState extends State<AmazingOverlay> {
   @override
   Widget build(BuildContext context) {
     return OverlayPortal(
-      controller: widget._portalController,
+      controller: widget.portalController,
       overlayChildBuilder: (context) => AmazingOverlayWidget(
-        overlay: widget._overlay,
-        overlayController: widget._overlayController,
-        portalController: widget._portalController,
-        startAnimation: widget._startAnimation,
-        endAnimation: widget._endAnimation,
-        duration: widget._duration,
+        overlayController: widget.overlayController,
+        portalController: widget.portalController,
+        builder: widget.builder,
+        onDialogClosed: widget.onDialogClosed,
+        onDialogOpened: widget.onDialogOpened,
       ),
-      child: widget._child,
+      child: widget.child,
     );
   }
 }
 
 class AmazingOverlayWidget extends StatefulWidget {
-  final Widget _overlay;
-  final OverlayPortalController _portalController;
-  final OverlayController _overlayController;
-  final StartAnimation _startAnimation;
-  final EndAnimation _endAnimation;
-  final ({Duration startDuration, Duration endDuration})? _duration;
+  final OverlayController overlayController;
+  final OverlayPortalController portalController;
+  final Widget Function(AnimationController animationController,Animation animation) builder;
+
+  final (AnimationController, Animation) Function( TickerProvider vsync) onDialogOpened;
+
+  final Future<void> Function(AnimationController animationController,Animation animation) onDialogClosed;
 
   const AmazingOverlayWidget(
       {super.key,
-      required Widget overlay,
-      required OverlayController overlayController,
-      required OverlayPortalController portalController,
-      StartAnimation startAnimation = StartAnimation.animation01,
-      EndAnimation endAnimation = EndAnimation.animation01,
-        ({Duration startDuration, Duration endDuration})? duration})
-      : _overlay = overlay,
-        _portalController = portalController,
-        _overlayController = overlayController,
-        _startAnimation = startAnimation,
-        _endAnimation = endAnimation,
-        _duration = duration;
+      required this.overlayController,
+      required this.portalController,
+      required this.builder,
+      required this.onDialogOpened,
+      required this.onDialogClosed});
 
   @override
   State<AmazingOverlayWidget> createState() => _AmazingOverlayWidgetState();
@@ -101,74 +85,35 @@ class AmazingOverlayWidget extends StatefulWidget {
 
 class _AmazingOverlayWidgetState extends State<AmazingOverlayWidget>
     with TickerProviderStateMixin {
-  late AnimationController startController;
-  late Animation<double> startAnimation;
-  late AnimationController endController;
-  late Animation<double> endAnimation;
+  late AnimationController animationController;
+  late Animation animation;
   late StreamSubscription<OverlayState> stream;
-  late StartAnimationFactory _startAnimationFactory;
-  late EndAnimationFactory _endAnimationFactory;
 
-  Future onClosingDialog() async {
-    stream =
-        widget._overlayController.streamListener().listen((overlayState) async {
-      if (overlayState == OverlayState.hidden) {
-        startController.stop(canceled: true);
-        endController.forward().whenCompleteOrCancel(() {
-          widget._portalController.hide();
-        });
-      }
-    });
-  }
+  Future onClosingDialog() async {}
 
   @override
   void initState() {
-    _startAnimationFactory = StartAnimationFactory();
-    _endAnimationFactory = EndAnimationFactory();
+    /// init animation for opened dialog
+    var result = widget.onDialogOpened(this);
+    animationController = result.$1;
+    animation = result.$2;
 
-    ({Animation<double> animation, AnimationController controle}) startRecorde =
-        _startAnimationFactory.createAnimation(widget._startAnimation, this, widget._duration?.startDuration);
-    startAnimation = startRecorde.animation;
-    startController = startRecorde.controle;
-
-    ({Animation<double> animation, AnimationController controle}) endRecorde =
-        _endAnimationFactory.createAnimation(widget._endAnimation,this, widget._duration?.endDuration);
-    endAnimation = endRecorde.animation;
-    endController = endRecorde.controle;
-
-    startController.forward();
-
-    onClosingDialog();
+    /// init animation for closing dialog
+    stream =
+        widget.overlayController.streamListener().listen((overlayState) async {
+      if (overlayState == OverlayState.hidden) {
+        await widget.onDialogClosed( animationController, animation);
+        animationController.stop(canceled: true);
+        animationController.dispose();
+        stream.cancel();
+        widget.portalController.hide();
+      }
+    });
     super.initState();
   }
 
   @override
-  void dispose() {
-    stream.cancel();
-    startController.dispose();
-    endController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      builder: (context, _) {
-        return AnimatedBuilder(
-          builder: (context, _) {
-            return Align(
-              alignment: Alignment.center,
-              child: Transform.translate(
-                offset: Offset(0, startAnimation.value + endAnimation.value),
-                child: Opacity(
-                    opacity: 1 - endController.value, child: widget._overlay),
-              ),
-            );
-          },
-          animation: startAnimation,
-        );
-      },
-      animation: endAnimation,
-    );
+    return widget.builder(animationController, animation);
   }
 }

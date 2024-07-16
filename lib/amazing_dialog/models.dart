@@ -1,11 +1,6 @@
 part of 'amazing_dialog.dart';
 
-enum OverlayState { displayed, hidden, none }
-enum StartAnimation{
-  animation01,
-  animation02
-}
-enum EndAnimation{animation01}
+enum OverlayState { displayed, hidden}
 
 class OverlayController {
   final StreamController<OverlayState> _overlayStateController =

@@ -27,35 +27,50 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       body: Center(
         child: TextButton(
           onPressed: overlayController.show,
           child: AmazingOverlay(
             overlayController: overlayController,
-            startAnimation: StartAnimation.animation02,
-            duration: (
-              startDuration: const Duration(milliseconds: 500),
-              endDuration: const Duration(milliseconds: 300)
-            ),
-            overlay: Container(
-              width: 350,
-              height: 200,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
-                  color: Colors.deepOrange),
-              child: TextButton(
-                onPressed: overlayController.hide,
-                child: const Text("Close Me"),
-              ),
-            ),
+            onDialogOpened: (TickerProvider vsync) {
+              AnimationController animationController = AnimationController(
+                  vsync: vsync, duration: const Duration(milliseconds: 500));
+              Animation<double> animation = CurvedAnimation(
+                      parent: animationController, curve: Curves.fastLinearToSlowEaseIn)
+                  .drive(
+                      Tween<double>(begin: 40.0, end: 0.0));
+              animationController.forward();
+              return (animationController, animation);
+            },
+            onDialogClosed: (AnimationController animationController,
+                Animation animation) async {
+              animationController.stop(canceled: true);
+              await animationController.reverse();
+            },
+            builder: (AnimationController animationController,
+                Animation animation) {
+              return Center(
+                child: AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, _) {
+                    return Container(
+                      transform: Matrix4.translationValues(0, animation.value as double, 0),
+                      width: 350,
+                      height: 200,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(13),
+                          color: Colors.deepOrange),
+                      child: TextButton(
+                        onPressed: overlayController.hide,
+                        child: const Text("Close Me"),
+                      ),
+                    );
+                  }
+                ),
+              );
+            },
             child: const Text("Click Me"),
           ),
         ),
