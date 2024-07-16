@@ -31,7 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: TextButton(
           onPressed: overlayController.show,
-          child: AmazingOverlay(
+          child: AmazingOverlay<OneAnimation>(
             overlayController: overlayController,
             onDialogOpened: (TickerProvider vsync) {
               AnimationController animationController = AnimationController(
@@ -41,21 +41,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   .drive(
                       Tween<double>(begin: 40.0, end: 0.0));
               animationController.forward();
-              return (animationController, animation);
+              return OneAnimation(animationController, animation);
             },
-            onDialogClosed: (AnimationController animationController,
-                Animation animation) async {
-              animationController.stop(canceled: true);
-              await animationController.reverse();
+            onDialogClosed: (OneAnimation animations) async {
+              animations.animationController.stop(canceled: true);
+              await animations.animationController.reverse();
             },
-            builder: (AnimationController animationController,
-                Animation animation) {
+            builder: (OneAnimation animations) {
               return Center(
                 child: AnimatedBuilder(
-                  animation: animation,
+                  animation: animations.animation,
                   builder: (context, _) {
                     return Container(
-                      transform: Matrix4.translationValues(0, animation.value as double, 0),
+                      transform: Matrix4.translationValues(0, animations.animation.value as double, 0),
                       width: 350,
                       height: 200,
                       alignment: Alignment.center,

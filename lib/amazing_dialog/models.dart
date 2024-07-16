@@ -13,3 +13,22 @@ class OverlayController {
 
   Stream<OverlayState> streamListener() => _overlayStateController.stream;
 }
+
+abstract class Animations{
+  late Animation animation;
+  late AnimationController animationController;
+  Animations(this.animationController, this.animation);
+  void stopAll();
+  void disposeAll();
+}
+
+class OneAnimation extends Animations{
+
+  OneAnimation(super.animationController, super.animation);
+
+  @override
+  void disposeAll() => animationController.dispose();
+
+  @override
+  void stopAll() => animationController.stop(canceled: true);
+}

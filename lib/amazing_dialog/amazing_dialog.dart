@@ -4,15 +4,18 @@ import 'package:flutter/widgets.dart';
 
 part 'models.dart';
 
-class AmazingOverlay extends StatefulWidget {
+typedef BuilderFactory<TT> = Widget Function(TT animations);
+typedef OnDialogOpened<TT> = TT Function(TickerProvider vsync);
+typedef OnDialogClosed<TT> = Future<void> Function(TT animations);
+
+class AmazingOverlay<TT extends Animations> extends StatefulWidget {
   final OverlayController overlayController;
   final OverlayPortalController portalController;
   final Widget child;
-  final Widget Function(AnimationController animationController,Animation animation) builder;
-
-  final (AnimationController, Animation) Function(TickerProvider vsync) onDialogOpened;
-
-  final Future<void> Function(AnimationController animationController,Animation animation) onDialogClosed;
+  
+  final BuilderFactory<TT> builder;
+  final OnDialogOpened<TT> onDialogOpened;
+  final OnDialogClosed<TT> onDialogClosed;
 
   AmazingOverlay(
       {super.key,
@@ -24,10 +27,10 @@ class AmazingOverlay extends StatefulWidget {
       : portalController = OverlayPortalController();
 
   @override
-  State<AmazingOverlay> createState() => _AmazingOverlayState();
+  State<AmazingOverlay<TT>> createState() => _AmazingOverlayState<TT>();
 }
 
-class _AmazingOverlayState extends State<AmazingOverlay> {
+class _AmazingOverlayState<TT extends Animations> extends State<AmazingOverlay<TT>> {
   late StreamSubscription<OverlayState> _stream;
 
   @override
@@ -50,7 +53,7 @@ class _AmazingOverlayState extends State<AmazingOverlay> {
   Widget build(BuildContext context) {
     return OverlayPortal(
       controller: widget.portalController,
-      overlayChildBuilder: (context) => AmazingOverlayWidget(
+      overlayChildBuilder: (context) => AmazingOverlayWidget<TT>(
         overlayController: widget.overlayController,
         portalController: widget.portalController,
         builder: widget.builder,
@@ -62,14 +65,13 @@ class _AmazingOverlayState extends State<AmazingOverlay> {
   }
 }
 
-class AmazingOverlayWidget extends StatefulWidget {
+class AmazingOverlayWidget<TT extends Animations> extends StatefulWidget {
   final OverlayController overlayController;
   final OverlayPortalController portalController;
-  final Widget Function(AnimationController animationController,Animation animation) builder;
-
-  final (AnimationController, Animation) Function( TickerProvider vsync) onDialogOpened;
-
-  final Future<void> Function(AnimationController animationController,Animation animation) onDialogClosed;
+  
+  final BuilderFactory<TT> builder;
+  final OnDialogOpened<TT> onDialogOpened;
+  final OnDialogClosed<TT> onDialogClosed;
 
   const AmazingOverlayWidget(
       {super.key,
@@ -80,13 +82,14 @@ class AmazingOverlayWidget extends StatefulWidget {
       required this.onDialogClosed});
 
   @override
-  State<AmazingOverlayWidget> createState() => _AmazingOverlayWidgetState();
+  State<AmazingOverlayWidget<TT>> createState() => _AmazingOverlayWidgetState<TT>();
 }
 
-class _AmazingOverlayWidgetState extends State<AmazingOverlayWidget>
+class _AmazingOverlayWidgetState<TT extends Animations> extends State<AmazingOverlayWidget<TT>>
     with TickerProviderStateMixin {
-  late AnimationController animationController;
-  late Animation animation;
+  // late AnimationController animationController;
+  // late Animation animation;
+  late TT animations;
   late StreamSubscription<OverlayState> stream;
 
   Future onClosingDialog() async {}
@@ -94,17 +97,16 @@ class _AmazingOverlayWidgetState extends State<AmazingOverlayWidget>
   @override
   void initState() {
     /// init animation for opened dialog
-    var result = widget.onDialogOpened(this);
-    animationController = result.$1;
-    animation = result.$2;
+    animations = widget.onDialogOpened(this);
+
 
     /// init animation for closing dialog
     stream =
         widget.overlayController.streamListener().listen((overlayState) async {
       if (overlayState == OverlayState.hidden) {
-        await widget.onDialogClosed( animationController, animation);
-        animationController.stop(canceled: true);
-        animationController.dispose();
+        await widget.onDialogClosed( animations );
+        animations.stopAll();
+        animations.disposeAll();
         stream.cancel();
         widget.portalController.hide();
       }
@@ -114,6 +116,6 @@ class _AmazingOverlayWidgetState extends State<AmazingOverlayWidget>
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(animationController, animation);
+    return widget.builder(animations);
   }
 }
