@@ -3,9 +3,40 @@ part of '../amazing_dialog.dart';
 class ConfirmDialog extends StatelessWidget {
   OverlayController overlayController;
   Widget child;
+  String titleText;
+  String contentText;
+  String confirmButtonText;
+  String cancelButtonText;
+  TextStyle? titleTextStyle;
+  TextStyle? contentTextStyle;
+  TextStyle? confirmButtonTextStyle;
+  TextStyle? cancelButtonTextStyle;
+  Color? backgroundColor;
+  BoxShadow? boxShadow;
+  EdgeInsets? padding;
+  BorderRadius? borderRadius;
+  double? width;
+
 
   ConfirmDialog(
-      {super.key, required this.child, required this.overlayController});
+      {
+        super.key,
+        required this.overlayController,
+        required this.titleText,
+        required this.contentText,
+        required this.confirmButtonText,
+        required this.cancelButtonText,
+        required this.child,
+        this.width,
+        this.titleTextStyle,
+        this.contentTextStyle,
+        this.cancelButtonTextStyle,
+        this.confirmButtonTextStyle,
+        this.backgroundColor,
+        this.boxShadow,
+        this.padding,
+        this.borderRadius
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +61,8 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 
-  Widget builder(OneAnimation animations) {
+  Widget builder(BuildContext context, OneAnimation animations) {
+    ThemeData theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -38,35 +70,34 @@ class ConfirmDialog extends StatelessWidget {
           AnimatedBuilder(
               animation: animations.animation,
               builder: (context, _) {
-                ThemeData theme = Theme.of(context);
                 return Container(
                   transform: Matrix4.translationValues(
                       0, animations.animation.value as double, 0),
-                  padding: const EdgeInsets.all(20),
-                  width: 320,
+                  padding: padding ?? const EdgeInsets.all(15),
+                  width: width ?? 320,
                   // height: 170,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
+                      color: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surfaceContainerHigh,
                       boxShadow: [
-                        BoxShadow(
-                            color: Colors.green.withOpacity(.2),
+                        boxShadow ?? BoxShadow(
+                            color: (theme.dialogTheme.shadowColor ?? Colors.transparent).withOpacity(.2),
                             offset: const Offset(0, 0),
                             blurRadius: 16)
                       ]),
                   child: Column(
                     children: [
-                      const Row(
+                      Row(
                         children: [
                           Text(
-                            "Amazing Dialog",
-                            style: TextStyle(color: Colors.green, fontSize: 20, height: 1 ,fontWeight: FontWeight.w500),
+                            titleText,
+                            style: titleTextStyle ?? theme.dialogTheme.titleTextStyle,
                           )
                         ],
                       ),
                       const SizedBox(
-                        height: 10,
+                        height: 9,
                       ),
                       Row(
                         children: [
@@ -74,52 +105,37 @@ class ConfirmDialog extends StatelessWidget {
                             child: OverflowBox(
                               fit: OverflowBoxFit.deferToChild,
                                 child: Text(
-                              "Hi, this is a custom dialog using portalOverlay widget it's benefit widget.",
-                              style: TextStyle(
-                                  color: Colors.green.withOpacity(.9), fontSize: 16, height: 1.2, fontWeight: FontWeight.normal),
+                              contentText,
+                              style: contentTextStyle ?? theme.dialogTheme.contentTextStyle,
                             )),
                           )
                         ],
                       ),
                       const SizedBox(
-                        height: 15,
+                        height: 9,
                       ),
                       Row(
                         children: [
                           Expanded(
                             child: TextButton(
                               onPressed: overlayController.hide,
-                              style: ButtonStyle(
-                                  fixedSize: const WidgetStatePropertyAll(
-                                      Size(double.infinity, 40)),
-                                  backgroundColor: WidgetStatePropertyAll(
-                                      Colors.green.withOpacity(1)),
-                                  shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(9)))),
-                              child: const Text(
-                                "Confirm",
-                                style: TextStyle(color: Colors.white, fontSize: 14),
+                              style: theme.textButtonTheme.style,
+                              child: Text(
+                                confirmButtonText,
+                                style: contentTextStyle,
                               ),
                             ),
                           ),
                           const SizedBox(
-                            width: 20,
+                            width: 12,
                           ),
                           Expanded(
                             child: TextButton(
                               onPressed: overlayController.hide,
-                              style: ButtonStyle(
-                                  fixedSize: const WidgetStatePropertyAll(
-                                      Size(double.infinity, 40)),
-                                  backgroundColor: WidgetStatePropertyAll(
-                                      Colors.green.withOpacity(.2)),
-                                  shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(9)))),
-                              child: const Text(
-                                "Cancel",
-                                style: TextStyle(color: Colors.green, fontSize: 14),
+                              style: theme.textButtonTheme.style,
+                              child: Text(
+                               cancelButtonText,
+                                style: cancelButtonTextStyle,
                               ),
                             ),
                           ),

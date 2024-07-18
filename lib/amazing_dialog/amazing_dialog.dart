@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
 part 'models.dart';
 part 'dialogs/confirm_dialog.dart';
 
-typedef BuilderFactory<TT> = Widget Function(TT animations);
+typedef BuilderFactory<TT> = Widget Function(BuildContext context, TT animations);
 typedef OnDialogOpened<TT> = TT Function(TickerProvider vsync);
 typedef OnDialogClosed<TT> = Future<void> Function(TT animations);
 
@@ -121,6 +119,6 @@ class _AmazingOverlayWidgetState<TT extends Animations> extends State<AmazingOve
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(animations);
+    return widget.builder(context, animations);
   }
 }

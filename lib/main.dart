@@ -13,6 +13,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: MyHomePage(),
+      theme: ThemeData(
+        primaryColor: Colors.brown,
+        primaryColorLight: Colors.white
+      ),
+      themeMode: ThemeMode.light,
+      darkTheme: ThemeData(
+          primaryColor: Colors.white,
+          primaryColorLight: Colors.brown
+      ),
     );
   }
 }
@@ -33,10 +42,16 @@ class _MyHomePageState extends State<MyHomePage> {
           onPressed: overlayController.show,
           child: ConfirmDialog(
             overlayController: overlayController,
+            titleText: 'Amazing Dialog',
+            contentText: 'Welcome Back',
+            confirmButtonText: 'Submit',
+            cancelButtonText: 'Back',
+            width: 250,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: const Text("Click Me"),
           ),
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
